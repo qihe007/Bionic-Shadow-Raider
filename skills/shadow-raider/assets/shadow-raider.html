@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>仿生蝙蝠 · 交互三维模型 v2</title>
+<title>仿生蝙蝠 · 交互三维模型</title>
 <style>
   *{box-sizing:border-box}
   html,body{margin:0;height:100%;overflow:hidden;color:#dfe7f1;
@@ -5836,7 +5836,6 @@ var composer = null;
     composer.addPass(outPass);
 
     composer.setSize(innerWidth, innerHeight);
-    console.log('post: SSAO + bloom ready');
   } catch(err){
     console.warn('post disabled:', err);
     composer = null;
