@@ -40,7 +40,7 @@
   #bar .sep{width:1px;background:#1f2b3d;margin:2px 2px}
   #err{position:fixed;inset:0;display:none;place-items:center;text-align:center;
     font-size:14px;color:#ff9c9c;background:#0b0e13;padding:40px;line-height:2.2;z-index:99}
-  #tip{position:fixed;right:22px;bottom:20px;font-size:11px;color:#4d5d72;z-index:5}
+  #tip{position:fixed;left:22px;bottom:20px;font-size:11px;color:#4d5d72;z-index:5}
   #ctrl{position:fixed;right:18px;top:330px;width:206px;z-index:6;
     background:rgba(15,20,28,.92);border:1px solid #1f2b3d;border-radius:12px;padding:12px 14px}
   #ctrl .ct{font-size:11px;color:#5a6a80;letter-spacing:2px;margin-bottom:8px}
@@ -51,6 +51,37 @@
   #ctrl button.on{background:#1c3f6b;border-color:#2f6fd0;color:#a9d1ff}
   #ctrl button.wide{grid-column:1 / -1}
   #ctrl .st{margin-top:8px;font-size:11px;color:#63748b;line-height:1.7}
+  /* ===== 虚拟摇杆 ===== */
+  #stick{position:fixed;right:28px;bottom:62px;z-index:8;display:flex;align-items:flex-end;gap:16px;
+    user-select:none;-webkit-user-select:none}
+  .sUnit{display:flex;flex-direction:column;align-items:center;gap:5px}
+  .sBase{position:relative;border-radius:50%;touch-action:none;cursor:grab;
+    background:radial-gradient(circle at 50% 40%, rgba(34,48,66,.92), rgba(10,14,20,.96));
+    border:1px solid #34495f;
+    box-shadow:0 12px 28px rgba(0,0,0,.5), inset 0 0 26px rgba(70,130,200,.10);
+    transition:border-color .15s, box-shadow .15s}
+  .sBase.on{border-color:#2f6fd0;cursor:grabbing;
+    box-shadow:0 12px 28px rgba(0,0,0,.5), inset 0 0 30px rgba(70,150,255,.22)}
+  .sBase::before{content:'';position:absolute;left:50%;top:50%;width:64%;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(120,160,200,.16),transparent);transform:translate(-50%,-50%)}
+  .sBase::after{content:'';position:absolute;left:50%;top:50%;width:1px;height:64%;
+    background:linear-gradient(180deg,transparent,rgba(120,160,200,.16),transparent);transform:translate(-50%,-50%)}
+  .sKnob{position:absolute;left:50%;top:50%;border-radius:50%;transform:translate(-50%,-50%);
+    background:radial-gradient(circle at 36% 30%, #7fb4ee, #2d5e97 58%, #14304c);
+    border:1px solid #5690cf;
+    box-shadow:0 5px 16px rgba(0,0,0,.55), inset 0 1px 2px rgba(255,255,255,.4);
+    transition:box-shadow .15s}
+  .sBase.on .sKnob{box-shadow:0 5px 20px rgba(0,0,0,.55), 0 0 16px rgba(90,168,255,.5), inset 0 1px 2px rgba(255,255,255,.45)}
+  .sMk{position:absolute;font-size:10px;color:#6d88a6;letter-spacing:1px;pointer-events:none}
+  .sMk.u{left:50%;top:7px;transform:translateX(-50%)}
+  .sMk.d{left:50%;bottom:7px;transform:translateX(-50%)}
+  .sMk.l{left:8px;top:50%;transform:translateY(-50%)}
+  .sMk.r{right:8px;top:50%;transform:translateY(-50%)}
+  .sCap{font-size:10px;color:#637c95;letter-spacing:1px}
+  #stkMain .sBase{width:146px;height:146px}
+  #stkMain .sKnob{width:54px;height:54px}
+  #stkRoll .sBase{width:96px;height:96px}
+  #stkRoll .sKnob{width:38px;height:38px}
   /* 摄影感：暗角 + 极轻颗粒 */
   #vignette{position:fixed;inset:0;pointer-events:none;z-index:3;
     background:radial-gradient(ellipse 74% 66% at 50% 46%, rgba(0,0,0,0) 42%,
@@ -131,6 +162,24 @@
     <button data-cmd="level" class="wide">回 中（配平）</button>
   </div>
   <div class="st" id="ctlState">升降舵 0°　方向舵 0°　差动 0°</div>
+</div>
+
+<div id="stick">
+  <div class="sUnit" id="stkRoll">
+    <div class="sBase">
+      <span class="sMk l">左倾</span><span class="sMk r">右倾</span>
+      <div class="sKnob"></div>
+    </div>
+    <div class="sCap">横滚</div>
+  </div>
+  <div class="sUnit" id="stkMain">
+    <div class="sBase">
+      <span class="sMk u">爬升</span><span class="sMk d">下降</span>
+      <span class="sMk l">左转</span><span class="sMk r">右转</span>
+      <div class="sKnob"></div>
+    </div>
+    <div class="sCap">升降 · 转向</div>
+  </div>
 </div>
 
 <div id="vignette"></div>
@@ -5289,6 +5338,79 @@ var ctlTarget = { elev: 0, rud: 0, roll: 0, pitch: 0, yaw: 0, bank: 0 };
       buttons.forEach(function(b){ b.classList.toggle('on', b === btn && btn.dataset.cmd !== 'level'); });
     };
   });
+})();
+
+/* ================= 虚拟摇杆（主杆：升降+转向 / 副杆：横滚） ================= */
+(function bindSticks(){
+  var st = { mx: 0, my: 0, rx: 0 };
+
+  function clamp(v, a, b){ return v < a ? a : (v > b ? b : v); }
+
+  function apply(){
+    var elev = -22 * st.my;                 // 上推 = 爬升（elev 负）
+    var yaw  =  15 * st.mx;                 // 右推 = 右转
+    var roll =   9 * st.rx;
+    var bank =  -9 * st.mx + 18 * st.rx;    // 转向联动倾斜 + 横滚杆
+    ctlTarget.elev  = clamp(elev, -22, 22);
+    ctlTarget.pitch = clamp(-8 * st.my, -10, 10);
+    ctlTarget.yaw   = clamp(yaw, -16, 16);
+    ctlTarget.roll  = clamp(roll, -9, 9);
+    ctlTarget.bank  = clamp(bank, -26, 26);
+    ctlTarget.rud   = clamp(-yaw * 1.55, -24, 24);
+  }
+
+  function mk(id, onMove){
+    var unit = document.getElementById(id);
+    if(!unit) return;
+    var base = unit.querySelector('.sBase');
+    var knob = unit.querySelector('.sKnob');
+    if(!base || !knob) return;
+    var dragging = false;
+
+    function place(nx, ny){
+      var R = base.clientWidth / 2 - knob.clientWidth / 2 - 2;
+      knob.style.transform = 'translate(-50%,-50%) translate(' +
+        (nx * R).toFixed(1) + 'px,' + (-ny * R).toFixed(1) + 'px)';
+    }
+    function read(e){
+      var r = base.getBoundingClientRect();
+      var dx = e.clientX - (r.left + r.width / 2);
+      var dy = e.clientY - (r.top + r.height / 2);
+      var max = r.width / 2 - 4;
+      var len = Math.sqrt(dx * dx + dy * dy);
+      if(len > max){ dx *= max / len; dy *= max / len; }
+      var nx = dx / max, ny = -dy / max;
+      place(nx, ny);
+      onMove(nx, ny);
+    }
+    base.addEventListener('pointerdown', function(e){
+      dragging = true;
+      base.classList.add('on');
+      if(base.setPointerCapture) { try { base.setPointerCapture(e.pointerId); } catch(err){} }
+      Array.prototype.forEach.call(document.querySelectorAll('#ctrl button'), function(b){ b.classList.remove('on'); });
+      read(e);
+      e.preventDefault(); e.stopPropagation();
+    });
+    base.addEventListener('pointermove', function(e){
+      if(!dragging) return;
+      read(e);
+      e.preventDefault(); e.stopPropagation();
+    });
+    function end(e){
+      if(!dragging) return;
+      dragging = false;
+      base.classList.remove('on');
+      place(0, 0);
+      onMove(0, 0);
+      if(e) e.stopPropagation();
+    }
+    base.addEventListener('pointerup', end);
+    base.addEventListener('pointercancel', end);
+    base.addEventListener('lostpointercapture', function(){ end(null); });
+  }
+
+  mk('stkMain', function(x, y){ st.mx = x; st.my = y; apply(); });
+  mk('stkRoll', function(x, y){ st.rx = x; apply(); });
 })();
 
 /* ================= 空气动力模拟（粒子流场） ================= */

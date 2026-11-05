@@ -243,6 +243,11 @@ Shadow Raider/
 
 完整零件清单（含逐件质量、成本、规格、工艺要点）见 `skills/shadow-raider/references/model-spec.md`。
 
+## 延伸阅读
+
+- **[研究成果与技术报告](Shadow-Raider-Research-Findings-Text.md)** —— 文献调研、叶素积分推导、
+  下洗与翼尖涡建模、四杆机构反解、翼根强度校核、三次设计迭代的验算记录
+
 ---
 
 ## 技术栈
