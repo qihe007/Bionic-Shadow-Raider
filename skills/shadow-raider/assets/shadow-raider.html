@@ -139,7 +139,7 @@
 
 <div id="aeroPanel">
   <div class="ct">空 气 动 力 模 拟</div>
-  <div class="state" id="aeroState">待机 · 点击模型开始飞行</div>
+  <div class="state" id="aeroState">飞行中 · 扑动 9.3 Hz · 点击模型暂停</div>
   <div class="row"><span>来流速度</span><b id="aeroU">—</b></div>
   <div class="row"><span>瞬时升力</span><b id="aeroL">—</b></div>
   <div class="row"><span>下洗速度</span><b id="aeroD">—</b></div>
@@ -5641,7 +5641,7 @@ function setAeroFlight(on){
   if(bf) bf.classList.toggle('on', on);
   var st = document.getElementById('aeroState');
   if(st){
-    st.textContent = on ? '飞行中 · 扑动 9.3 Hz · 点击模型降落' : '待机 · 点击模型开始飞行';
+    st.textContent = on ? '飞行中 · 扑动 9.3 Hz · 点击模型暂停' : '已暂停 · 点击模型继续';
     st.classList.toggle('live', on);
   }
 }
@@ -5659,7 +5659,7 @@ function setAero(on){
     aero.group.visible = true;
     clearHi();
     if(card) card.style.display = 'none';
-    setAeroFlight(false);
+    setAeroFlight(true);   // 进入气动模式直接起飞，不必再点模型
     setCam([880, 250, 130], [0, -6, -80]);
     var uEl = document.getElementById('aeroU');
     if(uEl) uEl.textContent = aero.U.toFixed(1) + ' m/s';
