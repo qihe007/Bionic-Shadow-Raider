@@ -5362,7 +5362,7 @@ function buildAero(){
   lGeo.setAttribute('position', new THREE.BufferAttribute(lPos, 3));
   lGeo.setAttribute('color', new THREE.BufferAttribute(lCol, 3));
   var lMat = new THREE.LineBasicMaterial({
-    vertexColors: true, transparent: true, opacity: 0.45, depthWrite: false
+    vertexColors: true, transparent: true, opacity: 0.40, depthWrite: false
   });
   var lMesh = new THREE.LineSegments(lGeo, lMat);
   lMesh.frustumCulled = false;
@@ -5391,7 +5391,10 @@ function aeroField(x, y, z, out){
   var U = aero.U * 180 * (0.30 + 0.70 * flying);
   var lf = Math.min(1.32, Math.max(0, aero.lift) / 1.95);
   var lfV = Math.max(0.72, lf);         // 待机也有来流绕流（5° 安装角），否则流线是一条条直尺
-  var flap = flying ? Math.sin(aero.t * Math.PI * 2 * 9.3) : 0;
+  // 关键：用主循环的扑翼相位 t 驱动流场，而不是独立计时的 aero.t
+  // 这样翼面下拍的气流冲击和模型的扑翼动作严格同步
+  var ph = t * Math.PI * 2 * FREQ;
+  var flap = flying ? Math.sin(ph) : 0;
   var span = AERO.R;
 
   out.x = 0; out.y = 0; out.z = -U;
@@ -5423,12 +5426,12 @@ function aeroField(x, y, z, out){
     var spanW = Math.pow(ell, 0.55);
     var yFade = 0.55 + 0.45 * Math.exp(-Math.pow(y / 210, 2));
     var rollA = 1 + (ctl.roll / 9) * 0.55 * Math.tanh(x / 280);   // 横滚：两侧下洗不对称
-    out.y -= U * 0.40 * lfV * dz * run * spanW * yFade * (0.88 + 0.12 * flap) * (1 - ctl.elev * 0.020) * rollA;
+    out.y -= U * 0.40 * lfV * dz * run * spanW * yFade * (1 + 0.42 * flap) * (1 - ctl.elev * 0.020) * rollA;
 
     /* 近场环流：上方气流被抬升、下方气流被压下去 —— 形成包住机翼的弯曲 */
     var near = Math.exp(-Math.pow((z + 30) / 175, 2));
     var circ = Math.tanh((y + 4) / 58) * Math.exp(-Math.abs(y) / 140) * Math.exp(-sx*sx*1.15);
-    out.y += U * 0.46 * lfV * near * circ * (0.92 + 0.08 * flap);
+    out.y += U * 0.46 * lfV * near * circ * (1 + 0.26 * flap);
 
     /* 上下压差把空气往翼尖方向推（展向外流），这是"绕"的关键 */
     out.x += (x >= 0 ? 1 : -1) * U * 0.14 * lfV * near * Math.exp(-Math.abs(y) / 160) * sx * spanW;
@@ -5438,9 +5441,19 @@ function aeroField(x, y, z, out){
     out.y += U * 0.17 * lfV * dz * outb * (0.7 + 0.3 * run);
   }
 
+  /* 3.5) 扑翼尾迹涡街：每扑一次甩出一对涡，下游形成一波一波的行波
+     波长按 U / f 取 ≈ 74 mm，所以气流会被"推"成一串波，而不是均匀下偏 */
+  if(z < 10 && flying){
+    var wAmp = U * 0.11 * lfV
+             * Math.min(1, (10 - z) / 130)
+             * (1 / (1 + Math.max(0, -(z + 60)) / 700));
+    var wLat = Math.exp(-Math.pow(x / (span * 1.15), 2)) * Math.exp(-Math.abs(y) / 260);
+    out.y += Math.sin(ph - z * 0.045) * wAmp * wLat;
+  }
+
   /* 4) 两条翼尖拖曳涡（Lamb-Oseen 涡核，绕 -z 方向旋转） */
   if(z < 90 && lfV > 0.05){
-    var gAmp = 82000 * lfV * Math.min(1, (90 - z) / 140);
+    var gAmp = 82000 * lfV * Math.min(1, (90 - z) / 140) * (1 + 0.38 * flap);
     for(var k = 0; k < 2; k++){
       var sgn = k === 0 ? -1 : 1;
       var dx = x - span * sgn, dy = y;
@@ -5589,9 +5602,9 @@ function updateAero(dt){
   aero.streakGeo.attributes.position.needsUpdate = true;
   aero.streakGeo.attributes.color.needsUpdate = true;
 
-  // 流线重算（0.2s 一次）
+  // 流线重算（0.12s 一次，跟上扑翼节奏，能看到随扑动摆动）
   aero.lineT += dt;
-  if(aero.lineT > 0.2){ aero.lineT = 0; updateStreamlines(); }
+  if(aero.lineT > 0.12){ aero.lineT = 0; updateStreamlines(); }
 
   // 翼尖涡螺旋
   aero.vortices.forEach(function(v){
