@@ -19,7 +19,7 @@
   .item:hover{background:#161d29;color:#e6f0fc}
   .item.on{background:#1a2c47;color:#8fc1ff}
   .item i{font-style:normal;color:#55657b;font-size:11px}
-  #card{position:fixed;right:22px;top:96px;width:330px;display:none;z-index:6;
+  #card{position:fixed;right:238px;top:96px;width:330px;display:none;z-index:6;
     background:rgba(15,20,28,.96);border:1px solid #1f2b3d;border-radius:12px;padding:18px 20px}
   #card h3{margin:0 0 5px;font-size:15px;color:#eaf2ff}
   #card .tag{font-size:10px;color:#4ea1ff;border:1px solid #24405f;border-radius:20px;
@@ -120,7 +120,7 @@
 <div id="hud">
   <h1>仿生蝙蝠 · 交互三维模型</h1>
   <p>翼展 840 mm　起飞重量 <b id="statW">—</b>　整机成本 <b id="statC">—</b>　扑动 9.3 Hz<br>
-     翼载 13.6 g/dm²　展弦比 6.9　雷诺数 5.2×10⁴<br>
+     翼载 11.9 g/dm²　展弦比 6.9　雷诺数 5.2×10⁴<br>
      三轴控制：升降（俯仰）· 转向（偏航）· 倾斜（横滚）<br>
      左键旋转 · 滚轮缩放 · 右键平移 · 单击零件看参数</p>
 </div>
@@ -3413,11 +3413,12 @@ if (typeof THREE === 'undefined') {
 
 /* ================= 零件资料（真机工艺口径） ================= */
 // 逐件重量（g）与成本（元）——HUD 汇总由此计算，避免和文字对不上
-var MASS = { head:6.2, body:10.4, tail:5.4, shoulder:6.8, elbow:3.8, wrist:5.2, fingers:4.2,
-  membrane:17.8, motor:14.4, gearbox:5.2, crank:6.2, servo:13.6, elevator:6.1, rudder:5.9,
-  battery:18.2, rx:6.5, esc:3.9 };
-var COST = { head:30, body:60, tail:55, shoulder:45, elbow:25, wrist:55, fingers:30, membrane:35,
-  motor:135, gearbox:74, crank:58, servo:170, elevator:55, rudder:55, battery:55, rx:135, esc:65 };
+var MASS = { head:4.7, body:8.2, tail:4.2, shoulder:5.6, elbow:3.2, wrist:7.6, fingers:3.4,
+  membrane:10.2, motor:13.2, gearbox:4.4, crank:5.2, servo:18.0, elevator:5.3, rudder:5.1,
+  battery:13.0, rx:5.6, esc:4.2, sensor:1.6 };
+var COST = { head:120, body:380, tail:150, shoulder:500, elbow:180, wrist:600, fingers:120, membrane:180,
+  motor:420, gearbox:450, crank:220, servo:1200, elevator:160, rudder:160, battery:160, rx:135,
+  esc:220, sensor:45 };
 
 var TOTAL_MASS = Object.keys(MASS).reduce(function(a, k){ return a + MASS[k]; }, 0);
 var TOTAL_COST = Object.keys(COST).reduce(function(a, k){ return a + COST[k]; }, 0);
@@ -3427,61 +3428,62 @@ var PARTS = {
       'PA12 SLS 打印 0.6mm 壁厚',
       '脑颅 23×25mm，吻部短宽，耳廓 0.7mm 板',
       '耳缘 Ø0.8 碳丝加强，带耳屏',
-      '组件 6.2 g（含 2 g 配重片）',
+      '组件 4.7 g（0.35 mm SLS + 碳肋，含 0.6 g 微调配重）',
       '重心 25% MAC（距前缘 31mm）',
       '成本 ¥30'],
     w:'耳廓是薄板折角，作用是压住机头、把重心顶到平均气动弦长 25%。配重片用双面胶 + M1.6 压住，重心每后移 3mm，首飞抬头就压不住。'},
   body: {n:'机身主梁', t:'结构基准', r:[
-      'T700 碳管 Ø12×1.0 × 180mm',
+      'T1000 碳管 Ø12×0.5 预浸 × 180mm',
       '前端 PA12 转接座，Ø6 尾梁插接',
       '轴孔 Ø3H7，台钻 + 铰刀',
       '含腹部整流罩、走线夹、托盘',
-      '10.4 g｜¥60'],
+      '8.2 g｜¥380（薄壁 T1000 + 钛转接）'],
     w:'全机静止基准，误差都从这里累积。肩轴孔必须台钻配合铰刀——手持电钻偏 0.2mm，左右扑翼相位差 3°，飞起来机体自旋。腹部整流罩是 0.4mm PA12 吸塑件，护住电池与走线。'},
   tail: {n:'尾梁 + 尾膜', t:'俯仰阻尼', r:[
       'Ø6×1 碳尾梁 168mm + PA12 夹座',
       '尾膜 TPU 0.05mm，60×70mm',
       '双骨架 + 后缘碳丝 Ø0.5',
-      '5.4 g｜¥55'],
+      '4.2 g｜¥150（T800 薄壁）'],
     w:'主翼下拍时尾膜被气流上抬，压住机头上仰力矩。尾梁插接深度 ≥25mm，只靠胶粘会在第一次硬着陆时断在接口。'},
   shoulder: {n:'肩关节 · 轴承座', t:'1 自由度 · ±32°', r:[
       'Ø3 淬火轴 + 2× MR83ZZ 轴承',
       'PA12 轴承座，壁厚 3mm',
       '摇臂有效半径 12mm',
-      '双侧合计 6.8 g｜¥45'],
+      '双侧合计 5.6 g｜¥500（CNC 7075 镂空 + 钛销）'],
     w:'8Hz 下 POM 衬套十起落就晃，所以换成双微型轴承。两个轴承座必须与主梁一次装夹打孔，不同轴会在翼根产生交变弯矩，碳管断在孔口。'},
   elbow: {n:'肘关节', t:'被动折叠 0–45°', r:[
-      'PA12 夹板 + Ø2 不锈钢销',
+      'CNC 7075 夹板 + Ø2 钛销',
       '预压 0.3N 硅胶垫片',
       '可换限位片 30°/45°/60°',
-      '双侧 3.8 g｜¥25'],
+      '双侧 3.2 g｜¥180'],
     w:'靠气动与离心力自己收展，不占驱动，这是蝙蝠和鸟最大的分野。限位越小巡航越省电、抗风越差；场地有风换 60° 那对。'},
-  wrist: {n:'腕关节 · 拉线驱动', t:'±25°｜横滚差动', r:[
-      'PA12 转块 + Ø1.5 销 + 回位弹簧',
-      'Ø0.4 凯夫拉线 + Ø1.2 鞘管',
-      '舵机在机身内，翼上仅 2.6 g/侧',
-      '左右差动 ±9° → 产生横滚力矩',
-      '双侧 5.2 g｜¥55'],
-    w:'腕部不装舵机——那是 20 g 往复惯量，8Hz 下等于拿电机甩哑铃。舵机放机身、凯夫拉线沿前缘走到腕部，左右腕差动扭转就是横滚控制，不额外加副翼。'},
+  wrist: {n:'腕关节 · 双轴（俯仰 + 扭转）', t:'俯仰 ±12°｜扭转 ±25°', r:[
+      '俯仰叉：CNC 7075 两片立板 + Ø1 钛销，绕展向轴',
+      '扭转块：Ø1.5 销 + 回位弹簧，叠加在俯仰叉上',
+      '两轴正交串联：前臂 → 俯仰叉 → 扭转块 → 掌',
+      '第三根 Ø0.4 凯夫拉线（俯仰）+ 肘部 Ø8 导向轮',
+      '装配前 2 kg 预拉 24 h，吃掉凯夫拉初始蠕变',
+      '双侧 7.6 g｜¥600'],
+    w:'两轴正交，俯仰在前、扭转在后。俯仰只做配平与阵风抑制（±12°，舵机带宽约 2.5Hz），不做逐周期变弯度——外翼段 10° 幅值、9.3Hz 的惯性力矩是 4.0 kg·cm，是气动铰链力矩的 7 倍，硬做要换 20 g 级舵机，得不偿失。第三根线在肘部绕一个 Ø8 导向轮，前臂折叠 17° 时线长只变 0.35mm，由鞘管与弹簧吸收。'},
   fingers: {n:'翼指 ×3', t:'膜面张紧 / 后缘控制', r:[
-      'T300 碳扁条 1.2×3.5mm 拉挤',
+      'T800 碳扁条 1.0×3.0mm 拉挤',
       '长度 160 / 154 / 165mm（三指分节）',
       '指根 Ø1 销铰接，可调 0–12°',
-      '双侧 4.2 g｜¥30'],
+      '双侧 3.4 g｜¥120'],
     w:'三根指决定翼面轮廓。扁条有方向性，只在竖直方向弯、展向几乎不弯，膜面才不会被拉成麻花。指根角度可调，调大后缘更兜气，上抬阻力也大。'},
   membrane: {n:'翼膜（3 块 / 侧）', t:'升力面', r:[
-      'TPU 0.05mm 复合涤纶网布',
+      '0.015 mm 定向 PP + 芳纶网格 + 3 条展向张力带',
       '前膜 + 指间膜 ×2，单侧 514 cm²',
       '扇贝后缘 + Ø1 后缘碳丝',
       '弦向预张力 0.15N，夹条可调',
-      '双侧 17.8 g｜¥35'],
+      '双侧 10.2 g（含张力带 0.6 g）｜¥180'],
     w:'三块独立翼膜按翼指分片，后缘做扇贝形凹口——真蝙蝠就靠这个泄掉部分下洗、削弱翼尖涡。整块平膜滚转迟钝、侧风易掀翻。'},
   motor: {n:'主电机 · 1404 减速无刷', t:'动力源', r:[
       '1404 KV3800 外转子 Ø14×19mm',
       '内置 10:1 行星减速（输出 Ø3）',
       '2S 输出约 2000 rpm',
       '配 10T 小齿轮（模数 0.7）',
-      '14.4 g｜¥135'],
+      '13.2 g｜¥420'],
     w:'8Hz、周期 125ms，舵机跟不上，主扑翼只能无刷 + 曲柄。电机抱箍不能全包，外转子要散热，包死连续扑 40 秒就烫手降转。'},
   gearbox: {n:'减速齿轮组', t:'总减速 36:1', r:[
       '行星 10:1 + POM 齿轮 10T:36T',
@@ -3489,38 +3491,39 @@ var PARTS = {
       '中心距 16.2mm，侧隙 0.06mm',
       '3mm 碳侧板 + 2× 法兰轴承（Ø10×Ø3）',
       '铝压盖轴向限位，齿轮外露可检修',
-      '5.2 g｜¥74'],
+      '4.4 g｜¥450（渗碳钢 + 辐板镂空）'],
     w:'空载 5.5 万转经 3.6:1 降到 1.5 万转，再经曲柄转成 8Hz 往复。侧隙大了冲击噪声大、小了发热，0.06mm 是试出来的。'},
   crank: {n:'曲柄连杆机构', t:'旋转 → 往复', r:[
       '7075 铝曲柄盘 Ø18×2.6mm，夹紧毂 + M2 顶丝',
       '偏心销 Ø2.6，偏心 6mm，销端卡簧防脱',
       'Ø3 碳连杆 + 两端 M2 球头扣（可调长度）',
       '摇臂半径 13.6mm，摆角 ±30°',
-      '6.2 g｜¥58'],
+      '5.2 g｜¥220（7075 镂空）'],
     w:'曲柄销 → M2 球头扣 → Ø3 碳连杆 → 肩摇臂，两端都是球头扣（可换向、可调长度），几何按偏心 6、摇臂 13.6 反解，翼摆 ±30°。销端带卡簧、轴端 M3 螺母，都是防止飞脱的必需件。'},
-  servo: {n:'腕部舵机 ×2', t:'DS1906-A', r:[
-      '2.6 kg·cm @7.4V，0.10s/60°',
-      '机身内置，拉线输出',
-      '行程 ±25°，混控板限幅',
-      '双侧 13.6 g｜¥170'],
-    w:'装的位置比型号更关键：放翼上是自杀。用拉线把往复惯量从 20g 压到 2.6g/侧。拉线走前缘内侧，不能压到翼膜。'},
+  servo: {n:'舵机 ×3 · HV 微舵', t:'1.6 kg·cm @8.4V', r:[
+      '扭转 ×2 + 俯仰 ×1，同型号同批次',
+      '6.0 g/颗，金属齿 + 双轴承，间隙 <0.05°',
+      '8.4V 直供（取消 5V BEC），0.09s/60°',
+      '俯仰需求 0.59 kg·cm → 余量 2.7 倍',
+      '合计 18.0 g｜¥1200'],
+    w:'三颗全在机身内，翼上只有线、轮和叉。选 HV 微舵不是为了更大扭矩——0.59 kg·cm 的铰链力矩，1.6 kg·cm 已经够——而是为了 8.4V 直供、去掉 BEC 这个额外失效点，同时金属齿把间隙压到 0.05° 以内，配平更稳。'},
   elevator: {n:'水平尾翼 · 升降舵', t:'俯仰 / 升降', r:[
       'PA12 骨架 + TPU 膜，翼展 176mm',
       '升降舵弦长 24mm，行程 ±20°',
       'ES9051 数码舵机 4.3 g 直驱推杆',
-      '6.1 g｜¥55'],
+      '5.3 g｜¥160（含 HV 微舵）'],
     w:'升降是控制“上下移动”的主通道：舵面后缘下偏 → 尾部抬升 → 机头上仰 → 爬升；上偏则下降。扑翼机的推力随扑动频率变化，所以爬升要“油门 + 拉杆”配合，单拉杆会掉速。'},
   rudder: {n:'垂直尾翼 · 方向舵', t:'偏航 / 左右转', r:[
       'PA12 骨架 + TPU 膜，高 55mm',
       '方向舵弦长 20mm，行程 ±22°',
       'ES9051 舵机 + Ø1 碳推杆',
-      '5.9 g｜¥55'],
+      '5.1 g｜¥160（含 HV 微舵）'],
     w:'左右转靠方向舵：后缘左偏 → 尾部右摆 → 机头左转。扑翼机低速时方向舵效率低，实际转向前先做 8° 横滚（差动扭翼），靠倾斜分量转弯，这就是“先倾后转”。'},
-  battery: {n:'电池', t:'2S 300mAh 25C', r:[
-      '62×30×16mm，18.2 g，XT30',
-      '续航 4–6 min（8Hz 巡航）',
+  battery: {n:'电池 · LiHV', t:'2S 300mAh 95C', r:[
+      '58×30×15mm，13.0 g，XT30',
+      '续航 5–7 min（8Hz 巡航）',
       '贴托盘底面安装，2 条尼龙扎带环抱',
-      '¥55'],
+      '¥160'],
     w:'7.4V 正好卡在 DS1906-A 的 2.6kg·cm 档，上 3S 一秒烧舵机。电池挂在重心下方 26mm，前后移动 10mm 就能调重心。'},
   rx: {n:'飞控 · ESP32', t:'三轴增稳 + 混控', r:[
       '模块 ESP32-S3-WROOM-1',
@@ -3529,16 +3532,24 @@ var PARTS = {
       '板卡 42×26×1.6mm（FR4 四层）',
       '模组 ESP32-S3-WROOM-1 + 屏蔽罩',
       '接口 USB-C / 2×3P 舵机排',
-      '重量 6.5 g（含屏蔽罩）',
+      '重量 5.6 g（去壳直焊）',
       '输出 3 路舵机 + 2 路尾舵',
       '模式 自稳 / 增稳 / 手动',
       '¥135'],
     w:'双核分工是 ESP32 的优势：核心 0 跑 8Hz 混控与相位补偿，核心 1 跑 WiFi 调参与日志，调参时不用停桨。代价是功耗——WiFi 常开约 110mA，会吃掉 2S 300mAh 的大半续航，所以飞行时关射频、只在地面调参时开。'},
-  esc: {n:'电调', t:'2S 20A', r:[
-      '20A 微型电调 30×14×5mm，3.9 g',
-      'BLHeli_S，PWM 50–500Hz',
+  sensor: {n:'曲柄编码器 · AS5600', t:'12-bit 绝对角', r:[
+      'I²C 12-bit，0.088°，3.3V 供电',
+      'Ø6×2.5 同轴磁钢，气隙 0.5–3mm',
+      '固定在压盖 M1.6 螺钉上，不动轴',
+      '直接输出曲柄角，无需 PLL 积分',
+      '1.6 g｜¥45'],
+    w:'比单脉冲霍尔贵十块钱，换来的是绝对角度：0.088° 分辨率、每 1ms 可读一次，不用靠周期积分推相位，转速波动时也不会漂。磁钢必须同轴偏置（r=0 会与 Ø3.2 轴干涉），气隙 1.5mm 在 0.5–3mm 的可用区间正中。'},
+  esc: {n:'电调 · BLHeli_32', t:'2S 20A / 遥测', r:[
+      '20A 高压电调 30×14×5mm，4.2 g',
+      'BLHeli_32，回传电流/电压/转速',
+      '8.4V 直供 5 颗 HV 舵机，无 BEC',
       '热缩封装，扎带固定主梁下侧',
-      '¥65'],
+      '4.2 g｜¥220'],
     w:'三相线等长、绞在一起，信号线单独走另一侧并隔开 5mm 以上，否则 8Hz 大电流脉冲会干扰陀螺。'}
 };
 
@@ -4679,6 +4690,36 @@ var drive = {};
     });
   });
 
+  // ---- 曲柄相位检测：磁钢（r=5.5）+ 霍尔小板（右端）----
+  (function(){
+    var R_MAG = 5.5, X_CAP = 25.3, X_FACE = 28.3;
+    // 磁钢 Ø4×1.5：沉孔 0.8，凸出 0.7
+    var mag = new THREE.Mesh(new THREE.CylinderGeometry(2, 2, 1.5, 18), M.steel);
+    mag.rotation.z = Math.PI/2;
+    mag.position.set(X_FACE - 0.8 + 0.75, 11 + R_MAG, 41.8);
+    gDrive.add(reg(mag, 'sensor'));
+    // 支架：从压盖外侧绕到盘前（避开 Ø18 盘）
+    // U 形支架：压盖外缘 → 径向绕出盘外 → 轴向越过盘 → 径向回到磁钢对面
+    gDrive.add(reg(rod(new THREE.Vector3(X_CAP + 0.1, 11 + 6.0, 41.8),
+                       new THREE.Vector3(X_CAP + 0.1, 11 + 10.0, 41.8), 0.32, M.alu, 6), 'sensor'));
+    gDrive.add(reg(rod(new THREE.Vector3(X_CAP + 0.1, 11 + 10.0, 41.8),
+                       new THREE.Vector3(30.4, 11 + 10.0, 41.8), 0.32, M.alu, 4), 'sensor'));
+    gDrive.add(reg(rod(new THREE.Vector3(30.4, 11 + 10.0, 41.8),
+                       new THREE.Vector3(30.4, 11 + R_MAG, 41.8), 0.32, M.alu, 6), 'sensor'));
+    // 0.8mm PCB + 贴片霍尔
+    var pcb = boxAt(0.8, 4.4, 4.4, M.printD, new THREE.Vector3(30.9, 11 + R_MAG, 41.8));
+    gDrive.add(reg(pcb, 'sensor'));
+    var chip = boxAt(0.5, 2.0, 1.6, M.steel, new THREE.Vector3(30.35, 11 + R_MAG, 41.8));
+    gDrive.add(reg(chip, 'sensor'));
+    // 三根细线引到飞控
+    gDrive.add(reg(tubePath([
+      new THREE.Vector3(31.2, 11 + R_MAG + 2, 41.8),
+      new THREE.Vector3(30.6, 20, 36),
+      new THREE.Vector3(20, 21, 20),
+      new THREE.Vector3(8, 12, -10)
+    ], 0.22, M.wireK, 16), 'sensor'));
+  })();
+
   // 曲柄盘 + 偏心销（左右各一，同一根输出轴，同相位）
   function buildCrank(sx){
     var cg = new THREE.Group();
@@ -4958,6 +4999,17 @@ var drive = {};
   decal(17, 8, texServoDS, new THREE.Vector3(14.58, -12, -44), [0, Math.PI/2, 0], gAvionics, 'servo');
   var sTop = boxAt(1.6, 11, 12, M.servoTop, new THREE.Vector3(0.6, -12, -44));
   gAvionics.add(reg(sTop, 'servo'));
+  // 腕俯仰舵机（ES9051，4.3 g）：电池前方，管下整流罩内
+  var sPitch = boxAt(20, 9, 23, M.servo, new THREE.Vector3(0, -13, 0));
+  gAvionics.add(reg(sPitch, 'servo'));
+  var sPitchTop = boxAt(1.4, 8, 22, M.servoTop, new THREE.Vector3(10.4, -13, 0));
+  gAvionics.add(reg(sPitchTop, 'servo'));
+  // 双摇臂（左右各引一根俯仰线）
+  gAvionics.add(reg(boxAt(2.0, 2.6, 14, M.print, new THREE.Vector3(14, -13, 0)), 'servo'));
+  // 5V BEC 小板
+  gAvionics.add(reg(boxAt(12, 5, 8, M.printD, new THREE.Vector3(0, -22, -6)), 'esc'));
+  gAvionics.add(reg(boxAt(12, 0.6, 8, M.servoTop, new THREE.Vector3(0, -24.8, -6)), 'esc'));
+
   // 舵机输出臂
   var horn = boxAt(2.2, 3, 18, M.print, new THREE.Vector3(-1.4, -12, -52));
   gAvionics.add(reg(horn, 'servo'));
@@ -5035,10 +5087,32 @@ function buildWing(side){
   wrPin.position.set(wristLocal.x, 2.6, wristLocal.z);
   forearm.add(reg(wrPin, 'wrist'));
 
-  // 掌 / 指组
+  // ---- 双轴腕：俯仰枢轴（绕展向 x 轴 ±12°）----
+  var wristPivot = new THREE.Group();
+  wristPivot.position.copy(wristLocal);
+  forearm.add(wristPivot);
+  [-1, 1].forEach(function(s2){
+    wristPivot.add(reg(boxAt(2.4, 8.6, 12, M.printD, new THREE.Vector3(s2*5.4, -1.4, 1)), 'wrist'));
+  });
+  wristPivot.add(reg(rod(new THREE.Vector3(-6.2, 2.4, 1), new THREE.Vector3(6.2, 2.4, 1), 0.5, M.steel, 8), 'wrist'));
+  // 俯仰摇臂：第三根拉线的着力点
+  wristPivot.add(reg(flatBar(new THREE.Vector3(0, 2.4, -6), new THREE.Vector3(0, 7.0, -9.5), 3.2, 1.6, M.alu), 'wrist'));
+
+  // 掌 / 指组（挂在俯仰枢轴下，随俯仰一起动）
   var hand = new THREE.Group();
-  hand.position.copy(wristLocal);
-  forearm.add(hand);
+  hand.position.set(0, 0, 0);
+  wristPivot.add(hand);
+
+  // 肘部导向轮 + 第三根拉线（俯仰）
+  var pulley = new THREE.Mesh(new THREE.CylinderGeometry(4.2, 4.2, 2.4, 16), M.printD);
+  pulley.rotation.z = Math.PI/2;
+  pulley.position.set(2*side, 3.4, 8);
+  forearm.add(reg(pulley, 'elbow'));
+  forearm.add(reg(tubePath([
+      new THREE.Vector3(6*side, 3.4, 10),
+      new THREE.Vector3(wristLocal.x*0.5, 3.3, wristLocal.z - 3),
+      new THREE.Vector3(wristLocal.x - 2*side, 3.2, wristLocal.z - 5)
+    ], 0.45, M.wireK, 14), 'wrist'));
   var f1 = new THREE.Vector3(187.5*side, 0, 16.1);
   var f2 = new THREE.Vector3(140.6*side, 0, -110.4);
   var f3 = new THREE.Vector3(-23.4*side, 0, -188.6);
@@ -5079,6 +5153,11 @@ function buildWing(side){
     ankle:    {x:10,   z:-175.2}
   };
 
+  // 翼膜枢轴：只承受腕俯仰，不继承前臂折叠（保持与原模型一致的外形）
+  var memPivot = new THREE.Group();
+  memPivot.position.set(LX(P.wrist.x), 0, LZ(P.wrist.z));
+  g.add(memPivot);
+
   // A 面板：肩→肘→腕 前缘，机身侧缘→f3 尖 后缘
   var A = surface(30, 12, function(u,v){
     var lead = u < 0.5 ? lerp2(P.shoulder, P.elbow, u*2) : lerp2(P.elbow, P.wrist, (u-0.5)*2);
@@ -5112,7 +5191,8 @@ function buildWing(side){
     var rip = membraneRipple(wx(x), wz(z), 1.05) * Math.sin(Math.PI * v);
     return {x: wx(x), y: sag + 1.0*Math.pow(1-v,3) + rip, z: wz(z)};
   });
-  g.add(reg(new THREE.Mesh(B, M.mem), 'membrane'));
+  B.translate(-(P.wrist.x - 28)*side, 0, -(P.wrist.z - 18));
+  memPivot.add(reg(new THREE.Mesh(B, M.mem), 'membrane'));
 
   // C 面板：腕 ↔ f2 / f3
   var C = surface(20, 8, function(u,v){
@@ -5127,7 +5207,8 @@ function buildWing(side){
     var rip = membraneRipple(wx(x), wz(z), 1.0) * Math.sin(Math.PI * v);
     return {x: wx(x), y: sag + 1.0*Math.pow(1-v,3) + rip, z: wz(z)};
   });
-  g.add(reg(new THREE.Mesh(C, M.mem), 'membrane'));
+  C.translate(-(P.wrist.x - 28)*side, 0, -(P.wrist.z - 18));
+  memPivot.add(reg(new THREE.Mesh(C, M.mem), 'membrane'));
 
   // 翼根肋：沿膜根曲线（y 随弦向变化），避免直线切进膜面
   var ribPts = [];
@@ -5160,7 +5241,7 @@ function buildWing(side){
     g.add(reg(s, 'membrane'));
   });
 
-  return {group:g, forearm:forearm, hand:hand, hornEnd:ballEnd, hornGroup:hornGroup, side:side,
+  return {group:g, forearm:forearm, hand:hand, wristPivot:wristPivot, memPivot:memPivot, hornEnd:ballEnd, hornGroup:hornGroup, side:side,
           shoulderPos:new THREE.Vector3(28*side, 0, 18),
           hornLocalZ:-13.5};
 }
@@ -6046,6 +6127,11 @@ function updateMechanism(angle){
     w.forearm.rotation.x = -0.30 * Math.max(0, Math.sin(angle + 0.6));
     var diff = (w === wR ? 1 : -1) * ctl.roll * Math.PI / 180;
     w.hand.rotation.x = -0.16 * Math.max(0, Math.sin(angle - 0.5)) + diff;
+    // 主动腕俯仰：配平 / 阵风抑制，±12°。ES9051 一阶滞后（τ≈0.09s）
+    var wpTgt = Math.max(-0.21, Math.min(0.21, -ctl.elev * 0.011));
+    w.wp = (w.wp === undefined) ? wpTgt : w.wp + (wpTgt - w.wp) * 0.16;
+    w.wristPivot.rotation.x = w.wp;
+    w.memPivot.rotation.x = w.wp;
   });
 
   // 摇臂端点：局部 (2*side, 0, -13.5)，绕 x 轴转 q
